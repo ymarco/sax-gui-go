@@ -2,7 +2,10 @@ module github.com/ymarco/sax-gui-go
 
 go 1.19
 
-require gioui.org v0.0.0-20221004231135-80196f3c3ed3
+require (
+	gioui.org v0.0.0-20221004231135-80196f3c3ed3
+	github.com/hajimehoshi/oto/v2 v2.3.1
+)
 
 require (
 	gioui.org/cpu v0.0.0-20210817075930-8d6a761490d2 // indirect

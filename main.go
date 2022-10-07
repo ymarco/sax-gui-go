@@ -21,6 +21,7 @@ import (
 )
 
 func main() {
+	testSound()
 	go func() {
 		w := app.NewWindow()
 		err := run(w)
