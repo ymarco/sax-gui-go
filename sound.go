@@ -30,16 +30,18 @@ func FloatBufferTo16BitLE(from []float32, to []byte) []byte {
 }
 
 type SineWave struct {
-	input SineWaveInputGenerator
+	input    *SineWaveInputGenerator
+	smoother Smoother
 	// Volume (up to 1.0)
 	Vol        float32
 	SampleRate int
 }
 
 func NewSineWave(freq, vol float32, sampleRate int) SineWave {
-
+	input := &SineWaveInputGenerator{a: SineWaveInputCoeff(freq, sampleRate)}
 	return SineWave{Vol: vol, SampleRate: sampleRate,
-		input: SineWaveInputGenerator{a: SineWaveInputCoeff(freq, sampleRate)}}
+		input:    input,
+		smoother: NewSmoother(input, 1000)}
 }
 
 func (self *SineWave) Read(buf []byte) (int, error) {
@@ -81,6 +83,36 @@ func (self *SineWaveInputGenerator) transitionInto(aNew float32) {
 	bOld := self.b
 	self.a = aNew
 	self.b = aOld*float32(self.samplesRead) + bOld - aNew*float32(self.samplesRead)
+}
+// TODO the whole smoother interface isn't working
+type InputGenerator interface {
+	apply() float32
+}
+
+type Smoother struct {
+	src     InputGenerator
+	history []float32
+	i       int
+}
+
+func NewSmoother(src InputGenerator, historyLen int) Smoother {
+	s := Smoother{src: src, history: make([]float32, historyLen)}
+	// for i := 0; i < historyLen-1; i++ {
+	// 	s.history[i] = src.apply()
+	// }
+	// s.i = historyLen - 1
+	return s
+}
+func (self *Smoother) apply() float32 {
+	self.history[self.i] = self.src.apply()
+	var sum float32 = 0.0
+	for i := 0; i< len(self.history); i++ {
+		sum += self.history[(i + 100) % len(self.history)]
+		// log.Println(i)
+		// sum += self.history[i]
+	}
+	self.i = (self.i + 1) % len(self.history)
+	return sum / float32(len(self.history))
 }
 
 // TODO this is a stand-in for midi
