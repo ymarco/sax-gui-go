@@ -5,6 +5,7 @@ import (
 	"image/color"
 	"log"
 	"os"
+	"time"
 
 	"gioui.org/app"
 	"gioui.org/font/gofont"
@@ -21,7 +22,16 @@ import (
 )
 
 func main() {
-	testSound()
+	notes := make(chan Note)
+	pause := make(chan int)
+	quit := make(chan int)
+	go StreamingPlayer(notes, pause, quit)
+	notes <- Note{Freq: 440.0, Vol: 1.0}
+	for i := 1; ; i++{
+		time.Sleep(500 * time.Millisecond)
+		notes <- Note{Freq: 440.0/float32(i), Vol: 1.0}
+	}
+
 	go func() {
 		w := app.NewWindow()
 		err := run(w)

@@ -1,8 +1,8 @@
 package main
 
 import (
+	"log"
 	"math"
-	"time"
 
 	"github.com/hajimehoshi/oto/v2"
 )
@@ -30,12 +30,16 @@ func FloatBufferTo16BitLE(from []float32, to []byte) []byte {
 }
 
 type SineWave struct {
-	// Frequency in Hz
-	Freq        float32
+	input SineWaveInputGenerator
 	// Volume (up to 1.0)
-	Vol float32
-	SampleRate  int
-	SamplesRead int64
+	Vol        float32
+	SampleRate int
+}
+
+func NewSineWave(freq, vol float32, sampleRate int) SineWave {
+
+	return SineWave{Vol: vol, SampleRate: sampleRate,
+		input: SineWaveInputGenerator{a: SineWaveInputCoeff(freq, sampleRate)}}
 }
 
 func (self *SineWave) Read(buf []byte) (int, error) {
@@ -44,15 +48,48 @@ func (self *SineWave) Read(buf []byte) (int, error) {
 	// bufFloat [len(buf)/2]float32
 
 	var i int64
-	for i = self.SamplesRead; i < self.SamplesRead+int64(cap(bufFloat)); i++ {
-		bufFloat[i] = float32(math.Sin(2 * math.Pi * (float64(i) / float64(self.SampleRate)) * float64(self.Freq) * self.Vol))
+	for i = 0; i < int64(cap(bufFloat)); i++ {
+		bufFloat[i] = float32(math.Sin(
+			2*math.Pi*
+				float64(self.input.apply()))) * self.Vol
 	}
 	FloatBufferTo16BitLE(bufFloat, buf[:0])
 
 	return cap(buf), nil
 }
 
-func testSound() {
+type SineWaveInputGenerator struct {
+	// the frequency in Hz
+	a float32
+	// implementation detail to allow smooth transitions
+	b           float32
+	samplesRead int64
+}
+
+func SineWaveInputCoeff(freq float32, sampleRate int) float32 {
+	return freq / float32(sampleRate)
+}
+
+// TODO add a smoothing function to this
+func (self *SineWaveInputGenerator) apply() float32 {
+	res := self.a*float32(self.samplesRead) + self.b
+	self.samplesRead += 1
+	return res
+}
+func (self *SineWaveInputGenerator) transitionInto(aNew float32) {
+	aOld := self.a
+	bOld := self.b
+	self.a = aNew
+	self.b = aOld*float32(self.samplesRead) + bOld - aNew*float32(self.samplesRead)
+}
+
+// TODO this is a stand-in for midi
+type Note struct {
+	Vol  float32
+	Freq float32
+}
+
+func StreamingPlayer(notes chan Note, pause chan int, quit chan int) {
 	// Prepare an Oto context (this will use your default audio device) that will
 	// play all our sounds. Its configuration can't be changed later.
 
@@ -66,31 +103,37 @@ func testSound() {
 	// Bytes used by a channel to represent one sample. Either 1 or 2 (usually 2).
 	audioBitDepth := 2
 
-	wave := SineWave{Freq: 440, SampleRate: samplingRate}
-
 	otoCtx, readyChan, err := oto.NewContext(samplingRate, numOfChannels, audioBitDepth)
 	if err != nil {
 		panic("oto.NewContext failed: " + err.Error())
 	}
 	// It might take a bit for the hardware audio devices to be ready, so we wait on the channel.
 	<-readyChan
-
-	// Create a new 'player' that will handle our sound. Paused by default.
-	player := otoCtx.NewPlayer(&wave)
-
-	// Play starts playing the sound and returns without waiting for it (Play() is async).
-	player.Play()
-
-	// We can wait for the sound to finish playing using something like this
-	for player.IsPlaying() {
-		time.Sleep(time.Millisecond)
+	var player oto.Player = nil
+	wave := NewSineWave(0, 1.0, samplingRate)
+	for {
+		select {
+		case note := <-notes:
+			if player != nil {
+				player.Pause()
+				// account for unplayed samples
+				wave.input.samplesRead -= int64(player.UnplayedBufferSize() / audioBitDepth)
+			}
+			wave.input.transitionInto(SineWaveInputCoeff(note.Freq, samplingRate))
+			// TODO handle note.Vol
+			player = otoCtx.NewPlayer(&wave)
+			log.Println(wave)
+			player.Play() // async, doesn't block
+		case <-pause:
+			if player != nil {
+				player.Pause()
+			}
+		case <-quit:
+			if player != nil {
+				player.Pause()
+			}
+			return
+		}
 	}
-}
-// TODO this is a stand-in for midi
-type Note struct {
-	vol float32
-	freq float32
-}
-func StreamingPlayer(freqs chan Note) {
-	for ()
+
 }
