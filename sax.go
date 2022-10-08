@@ -32,6 +32,7 @@ var saxKeyMap = map[string]*bool{
 	"O": &saxState.noteButtons[2],
 	"A": &saxState.auxButtons[SharpKey],
 	";": &saxState.auxButtons[FlatKey],
+
 	"Space": &saxState.auxButtons[UpOctaveKey],
 	// TODO find another left thumb key for DownOctaveKey
 	"H": &saxState.noteButtons[3],
@@ -71,7 +72,7 @@ var (
 	C5      = semitoneIntervalFrom(C5sharp, -1)
 	B4      = semitoneIntervalFrom(C5, -1)
 	A4sharp = semitoneIntervalFrom(A4, 1)
-	// A4 is predefined
+	A4      = 440.0
 	G4sharp = semitoneIntervalFrom(A4, -1)
 	G4      = semitoneIntervalFrom(A4, -2)
 	F4sharp = semitoneIntervalFrom(A4, -3)
