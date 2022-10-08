@@ -4,9 +4,7 @@ import (
 	"image"
 	"image/color"
 	"log"
-	"math"
 	"os"
-	"time"
 
 	"gioui.org/app"
 	"gioui.org/font/gofont"
@@ -29,6 +27,7 @@ func main() {
 	saxAudioController.pause = make(chan int)
 	saxAudioController.quit = make(chan int)
 	StartSaxAudioPlayer(saxAudioController)
+	defer func() { saxAudioController.quit <- 1 }()
 	go func() {
 		w := app.NewWindow()
 		err := run(w)
@@ -87,50 +86,44 @@ func ColorBox(gtx layout.Context, size image.Point, color color.NRGBA) layout.Di
 	return layout.Dimensions{Size: size}
 }
 
-type SaxButtonState [5]bool
-
 var saxStateList = layout.List{Axis: layout.Vertical}
 
-func SaxStateLayout(gtx layout.Context, state SaxButtonState) layout.Dimensions {
-	return saxStateList.Layout(gtx, 5,
+func SaxStateLayout(gtx layout.Context, state SaxState) layout.Dimensions {
+	return saxStateList.Layout(gtx, len(saxButtonDrawingInstructions),
 		func(gtx layout.Context, i int) layout.Dimensions {
+			instr := saxButtonDrawingInstructions[i]
 			return layout.UniformInset(unit.Dp(10)).Layout(gtx,
 				func(gtx layout.Context) layout.Dimensions {
 					var color color.NRGBA
-					if state[i] {
+					// TODO this segfaults
+					// if *instr.sourceStateButton {
+					if false {
 						color = onColor
 					} else {
 						color = offColor
 					}
-					return ColorBox(gtx, image.Point{60, 60}, color)
+					return ColorBox(gtx,
+						image.Point{int(instr.drawingSize * 60.0),
+							int(instr.drawingSize * 60.0)}, color)
 				})
 		})
 }
 
-var saxState = SaxButtonState{}
-var saxKeyMap = map[string]int64{
-	"A": 0,
-	"O": 1,
-	"E": 2,
-	"U": 3,
-	"H": 4,
-}
-
 // return true if something changed
 func updateSaxState(e key.Event) bool {
-	saxKey, ok := saxKeyMap[e.Name]
+	touchedButton, ok := saxKeyMap[e.Name]
 	if !ok {
 		return false
 	}
 	changed := false
 	if e.State == key.Press {
-		if saxState[saxKey] == false {
-			saxState[saxKey] = true
+		if *touchedButton == false {
+			*touchedButton = true
 			changed = true
 		}
 	} else {
-		if saxState[saxKey] == true {
-			saxState[saxKey] = false
+		if *touchedButton == true {
+			*touchedButton = false
 			changed = true
 		}
 	}
@@ -164,26 +157,19 @@ func run(w *app.Window) error {
 			eventArea := clip.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Push(ops)
 			key.FocusOp{Tag: w}.Add(ops)
 			// TODO get the key set from saxKeyMap
-			key.InputOp{Tag: w, Keys: key.Set("A|O|E|U|H")}.Add(ops)
+			key.InputOp{Tag: w, Keys: key.Set(saxKeySet)}.Add(ops)
 			eventArea.Pop()
 			e.Frame(gtx.Ops)
 		}
 	}
 }
 
-func updateAudioOutput(saxState SaxButtonState) {
+func updateAudioOutput(s SaxState) {
 	// for now: treat the buttons as a binary counter
-	noteNum := 0
-	for _, v := range saxState {
-		noteNum = noteNum << 1
-		if v {
-			noteNum += 1
-		}
-	}
-	noteNum -= 1
-	if noteNum == -1 {
+	freq := playingPitch(s)
+	if freq != 0 {
+		saxAudioController.notes <- Note{Freq: float32(freq), Vol: 1.0}
+	} else {
 		saxAudioController.pause <- 1
 	}
-	freq := 440.0 * math.Pow(2, float64(noteNum)/float64(12))
-	saxAudioController.notes <- Note{Freq: float32(freq), Vol: 1.0}
 }
