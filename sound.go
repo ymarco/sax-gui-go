@@ -181,13 +181,13 @@ func StreamingPlayer(notes chan Note, pause chan int, quit chan int) {
 
 // A controller controls the audio player. See StreamingPlayer for what the
 // channels do.
-type SaxAudioController struct {
+type NoteStreamAudioController struct {
 	notes chan Note
 	pause chan int
 	quit  chan int
 }
 
 // Asynchronically start playing audio according to c
-func StartSaxAudioPlayer(c SaxAudioController) {
+func StartNoteStreamAudioPlayer(c NoteStreamAudioController) {
 	go StreamingPlayer(c.notes, c.pause, c.quit)
 }

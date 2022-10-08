@@ -21,13 +21,13 @@ import (
 )
 
 // The global controller of the sax audio output
-var saxAudioController SaxAudioController
+var saxAudioController NoteStreamAudioController
 
 func main() {
 	saxAudioController.notes = make(chan Note)
 	saxAudioController.pause = make(chan int)
 	saxAudioController.quit = make(chan int)
-	StartSaxAudioPlayer(saxAudioController)
+	StartNoteStreamAudioPlayer(saxAudioController)
 	defer func() { saxAudioController.quit <- 1 }()
 	go func() {
 		w := app.NewWindow()
