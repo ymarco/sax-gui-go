@@ -168,7 +168,7 @@ func updateAudioOutput(s SaxState) {
 	// for now: treat the buttons as a binary counter
 	freq := playingPitch(s)
 	if freq != 0 {
-		saxAudioController.notes <- Note{Freq: float32(freq), Vol: 1.0}
+		saxAudioController.notes <- Note{Freq: float32(freq), Vol: 0.1}
 	} else {
 		saxAudioController.pause <- 1
 	}

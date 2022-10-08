@@ -41,7 +41,7 @@ func NewSineWave(freq, vol float32, sampleRate int) SineWave {
 	input := &SineWaveInputGenerator{a: SineWaveInputCoeff(freq, sampleRate)}
 	return SineWave{Vol: vol, SampleRate: sampleRate,
 		input:    input,
-		smoother: NewSmoother(input, 1000)}
+		smoother: NewSmoother(input, 1)}
 }
 
 func (self *SineWave) Read(buf []byte) (int, error) {
@@ -107,8 +107,8 @@ func NewSmoother(src InputGenerator, historyLen int) Smoother {
 func (self *Smoother) apply() float32 {
 	self.history[self.i] = self.src.apply()
 	var sum float32 = 0.0
-	for i := 0; i< len(self.history); i++ {
-		sum += self.history[(i + 100) % len(self.history)]
+	for i := 0; i < len(self.history); i++ {
+		sum += self.history[(i+100)%len(self.history)]
 		// log.Println(i)
 		// sum += self.history[i]
 	}
@@ -144,6 +144,7 @@ func StreamingPlayer(notes chan Note, pause chan int, quit chan int) {
 	<-readyChan
 	var player oto.Player = nil
 	wave := NewSineWave(0, 1.0, samplingRate)
+	log.Println(wave)
 	for {
 		select {
 		case note := <-notes:
@@ -153,9 +154,9 @@ func StreamingPlayer(notes chan Note, pause chan int, quit chan int) {
 				wave.input.samplesRead -= int64(player.UnplayedBufferSize() / audioBitDepth)
 			}
 			wave.input.transitionInto(SineWaveInputCoeff(note.Freq, samplingRate))
+			wave.Vol = note.Vol
 			// TODO handle note.Vol
 			player = otoCtx.NewPlayer(&wave)
-			log.Println(wave)
 			player.Play() // async, doesn't block
 		case <-pause:
 			if player != nil {
