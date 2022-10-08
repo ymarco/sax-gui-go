@@ -152,7 +152,8 @@ func run(w *app.Window) error {
 					continue
 				}
 				// log.Println(e)
-				shouldUpdate = shouldUpdate || updateSaxState(e)
+				currShouldUpdate := updateSaxState(e)
+				shouldUpdate = shouldUpdate || currShouldUpdate
 			}
 			if shouldUpdate {
 				updateAudioOutput(saxState)
