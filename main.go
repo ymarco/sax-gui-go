@@ -98,14 +98,14 @@ func SaxStateLayout(gtx layout.Context, state SaxState) layout.Dimensions {
 			return layout.UniformInset(unit.Dp(10)).Layout(gtx,
 				func(gtx layout.Context) layout.Dimensions {
 					var color color.NRGBA
-					if *instr.sourceStateButton {
+					if *instr.valPtr {
 						color = onColor
 					} else {
 						color = offColor
 					}
 					return ColorBox(gtx,
-						image.Point{int(instr.drawingSize * 60.0),
-							int(instr.drawingSize * 60.0)}, color)
+						image.Point{int(instr.size * 60.0),
+							int(instr.size * 60.0)}, color)
 				})
 		})
 }

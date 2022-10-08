@@ -42,27 +42,26 @@ var saxKeyMap = map[string]*bool{
 
 const saxKeySet = "U|E|O|A|;|Space|H|T|N|S"
 
-
 type ButtonDrawingInstruction struct {
-	sourceStateButton *bool
-	drawingSize       float64
+	valPtr *bool
+	size   float64
 }
 
 // this is a constant
 var saxButtonDrawingInstructions = []ButtonDrawingInstruction{
-	{sourceStateButton: &saxState.noteButtons[0], drawingSize: 1.0},
-	{sourceStateButton: &saxState.noteButtons[1], drawingSize: 1.0},
-	{sourceStateButton: &saxState.noteButtons[2], drawingSize: 1.0},
-	{sourceStateButton: &saxState.auxButtons[FlatKey], drawingSize: 0.5},
-	{sourceStateButton: &saxState.auxButtons[SharpKey], drawingSize: 0.5},
-	{sourceStateButton: &saxState.auxButtons[UpOctaveKey], drawingSize: 0.5},
-	{sourceStateButton: &saxState.noteButtons[3], drawingSize: 1.0},
-	{sourceStateButton: &saxState.noteButtons[4], drawingSize: 1.0},
-	{sourceStateButton: &saxState.noteButtons[5], drawingSize: 1.0},
-	{sourceStateButton: &saxState.noteButtons[6], drawingSize: 1.0},
+	{valPtr: &saxState.auxButtons[UpOctaveKey], size: 0.5},
+	{valPtr: &saxState.noteButtons[0], size: 1.0},
+	{valPtr: &saxState.noteButtons[1], size: 1.0},
+	{valPtr: &saxState.noteButtons[2], size: 1.0},
+	{valPtr: &saxState.auxButtons[FlatKey], size: 0.5},
+	{valPtr: &saxState.auxButtons[SharpKey], size: 0.5},
+	{valPtr: &saxState.noteButtons[3], size: 1.0},
+	{valPtr: &saxState.noteButtons[4], size: 1.0},
+	{valPtr: &saxState.noteButtons[5], size: 1.0},
+	{valPtr: &saxState.noteButtons[6], size: 1.0},
 }
-var A4 = 440.0
 
+// Thank god equal temperament is easy
 func semitoneIntervalFrom(src float64, interval int) float64 {
 	return src * math.Pow(2, float64(interval)/12.0)
 }
