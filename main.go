@@ -171,7 +171,6 @@ func run(w *app.Window) error {
 
 // Update the playing note to be the one that's played in s.
 func updateAudioOutput(s SaxState) {
-	// for now: treat the buttons as a binary counter
 	freq := playingPitch(s)
 	if freq != 0 {
 		saxAudioController.notes <- Note{Freq: float32(freq), Vol: 0.1}

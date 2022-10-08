@@ -97,6 +97,8 @@ var saxFingeringsMap = map[SaxNoteButtons]float64{
 	{true, true, true, true, true, true, true}:        C4,
 }
 
+// Return the pitch that the sax is playing based on s.
+// A return pitch of 0 means it's not playing anything.
 func playingPitch(s SaxState) float64 {
 	basePitch, ok := saxFingeringsMap[s.noteButtons]
 	if !ok {
