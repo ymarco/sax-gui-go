@@ -20,6 +20,7 @@ import (
 	"gioui.org/widget/material"
 )
 
+// The global controller of the sax audio output
 var saxAudioController SaxAudioController
 
 func main() {
@@ -86,8 +87,10 @@ func ColorBox(gtx layout.Context, size image.Point, color color.NRGBA) layout.Di
 	return layout.Dimensions{Size: size}
 }
 
+// Internal state of the sax display widget
 var saxStateList = layout.List{Axis: layout.Vertical}
 
+// Draw the sax buttons according to the state
 func SaxStateLayout(gtx layout.Context, state SaxState) layout.Dimensions {
 	return saxStateList.Layout(gtx, len(saxButtonDrawingInstructions),
 		func(gtx layout.Context, i int) layout.Dimensions {
@@ -107,7 +110,8 @@ func SaxStateLayout(gtx layout.Context, state SaxState) layout.Dimensions {
 		})
 }
 
-// return true if something changed
+// Update the sax state according to key input events. Return true if a button
+// changed state.
 func updateSaxState(e key.Event) bool {
 	touchedButton, ok := saxKeyMap[e.Name]
 	if !ok {
@@ -165,6 +169,7 @@ func run(w *app.Window) error {
 	}
 }
 
+// Update the playing note to be the one that's played in s.
 func updateAudioOutput(s SaxState) {
 	// for now: treat the buttons as a binary counter
 	freq := playingPitch(s)

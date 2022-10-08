@@ -45,7 +45,6 @@ func NewSineWave(freq, vol float32, sampleRate int) SineWave {
 }
 
 func (self *SineWave) Read(buf []byte) (int, error) {
-
 	bufFloat := make([]float32, cap(buf)/2)
 	// bufFloat [len(buf)/2]float32
 
@@ -60,6 +59,7 @@ func (self *SineWave) Read(buf []byte) (int, error) {
 	return cap(buf), nil
 }
 
+// An abstruction of a linear function that's meant to be an input to sin().
 type SineWaveInputGenerator struct {
 	// the frequency in Hz
 	a float32
@@ -72,12 +72,13 @@ func SineWaveInputCoeff(freq float32, sampleRate int) float32 {
 	return freq / float32(sampleRate)
 }
 
-// TODO add a smoothing function to this
 func (self *SineWaveInputGenerator) apply() float32 {
 	res := self.a*float32(self.samplesRead) + self.b
 	self.samplesRead += 1
 	return res
 }
+// If inputted to a sine function, this changes the wave into a new one with
+// frequency aNew, such that the old and new waves connect without jumps.
 func (self *SineWaveInputGenerator) transitionInto(aNew float32) {
 	aOld := self.a
 	bOld := self.b
@@ -85,11 +86,13 @@ func (self *SineWaveInputGenerator) transitionInto(aNew float32) {
 	self.b = aOld*float32(self.samplesRead) + bOld - aNew*float32(self.samplesRead)
 }
 
-// TODO the whole smoother interface isn't working
 type InputGenerator interface {
 	apply() float32
 }
 
+// A smoother takes an src InputGenerator and on each apply() returns src's
+// apply() averaged out with its previous outputs from apply()
+// TODO it's unused currently, there's a bug somewhere in it.
 type Smoother struct {
 	src     InputGenerator
 	history []float32
@@ -116,12 +119,16 @@ func (self *Smoother) apply() float32 {
 	return sum / float32(len(self.history))
 }
 
-// TODO this is a stand-in for midi
+// TODO this is a stand-in for midi. If/when we do a proper synthesizer it'd be
+// replaced.
 type Note struct {
 	Vol  float32
 	Freq float32
 }
 
+// Plays notes from the channel notes, synchronically (never returns by itself)
+// When a value is recieved from pause, stop and don't play anything.
+// When a value is recieved from quit, return.
 func StreamingPlayer(notes chan Note, pause chan int, quit chan int) {
 	// Prepare an Oto context (this will use your default audio device) that will
 	// play all our sounds. Its configuration can't be changed later.
@@ -172,12 +179,15 @@ func StreamingPlayer(notes chan Note, pause chan int, quit chan int) {
 
 }
 
+// A controller controls the audio player. See StreamingPlayer for what the
+// channels do.
 type SaxAudioController struct {
 	notes chan Note
 	pause chan int
 	quit  chan int
 }
 
+// Asynchronically start playing audio according to c
 func StartSaxAudioPlayer(c SaxAudioController) {
 	go StreamingPlayer(c.notes, c.pause, c.quit)
 }
