@@ -68,7 +68,7 @@ func semitoneIntervalFrom(src float64, interval int) float64 {
 }
 
 var (
-	C5sharp = semitoneIntervalFrom(A4, 5) // highest sax note without mod keys
+	C5sharp = semitoneIntervalFrom(A4, 4) // highest sax note without mod keys
 	C5      = semitoneIntervalFrom(C5sharp, -1)
 	B4      = semitoneIntervalFrom(C5, -1)
 	A4sharp = semitoneIntervalFrom(A4, 1)
