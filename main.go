@@ -81,7 +81,7 @@ func (self *Title) Layout(gtx layout.Context) layout.Dimensions {
 
 // ColorBox creates a widget with the specified dimensions and color.
 func ColorBox(gtx layout.Context, size image.Point, color color.NRGBA) layout.Dimensions {
-	defer clip.Rect{Max: size}.Push(gtx.Ops).Pop()
+	defer clip.Ellipse{Max: size}.Push(gtx.Ops).Pop()
 	paint.ColorOp{Color: color}.Add(gtx.Ops)
 	paint.PaintOp{}.Add(gtx.Ops)
 	return layout.Dimensions{Size: size}
@@ -95,7 +95,10 @@ func SaxStateLayout(gtx layout.Context, state SaxState) layout.Dimensions {
 	return saxStateList.Layout(gtx, len(saxButtonDrawingInstructions),
 		func(gtx layout.Context, i int) layout.Dimensions {
 			instr := saxButtonDrawingInstructions[i]
-			return layout.UniformInset(unit.Dp(10)).Layout(gtx,
+			return layout.Inset{
+				Top:  unit.Dp(instr.yOffset),
+				Left: unit.Dp(instr.xOffset),
+			}.Layout(gtx,
 				func(gtx layout.Context) layout.Dimensions {
 					var color color.NRGBA
 					if *instr.valPtr {
@@ -104,8 +107,7 @@ func SaxStateLayout(gtx layout.Context, state SaxState) layout.Dimensions {
 						color = offColor
 					}
 					return ColorBox(gtx,
-						image.Point{int(instr.size * 60.0),
-							int(instr.size * 60.0)}, color)
+						image.Point{int(instr.size), int(instr.size)}, color)
 				})
 		})
 }

@@ -44,22 +44,24 @@ var saxKeyMap = map[string]*bool{
 const saxKeySet = "U|E|O|A|;|Space|H|T|N|S"
 
 type ButtonDrawingInstruction struct {
-	valPtr *bool
-	size   float64
+	valPtr  *bool
+	size    float64
+	xOffset float32
+	yOffset float32
 }
 
 // this is a constant
 var saxButtonDrawingInstructions = []ButtonDrawingInstruction{
-	{valPtr: &saxState.auxButtons[UpOctaveKey], size: 0.5},
-	{valPtr: &saxState.noteButtons[0], size: 1.0},
-	{valPtr: &saxState.noteButtons[1], size: 1.0},
-	{valPtr: &saxState.noteButtons[2], size: 1.0},
-	{valPtr: &saxState.auxButtons[FlatKey], size: 0.5},
-	{valPtr: &saxState.auxButtons[SharpKey], size: 0.5},
-	{valPtr: &saxState.noteButtons[3], size: 1.0},
-	{valPtr: &saxState.noteButtons[4], size: 1.0},
-	{valPtr: &saxState.noteButtons[5], size: 1.0},
-	{valPtr: &saxState.noteButtons[6], size: 1.0},
+	{valPtr: &saxState.auxButtons[UpOctaveKey], size: 40, xOffset: 30, yOffset: 00},
+	{valPtr: &saxState.noteButtons[0], size: 60, xOffset: 20, yOffset: 15},
+	{valPtr: &saxState.noteButtons[1], size: 60, xOffset: 20, yOffset: 10},
+	{valPtr: &saxState.noteButtons[2], size: 60, xOffset: 50, yOffset: -15},
+	{valPtr: &saxState.auxButtons[SharpKey], size: 40, xOffset: 75, yOffset: 10},
+	{valPtr: &saxState.auxButtons[FlatKey], size: 40, xOffset: 75, yOffset: 00},
+	{valPtr: &saxState.noteButtons[3], size: 60, xOffset: 50, yOffset: 15},
+	{valPtr: &saxState.noteButtons[4], size: 60, xOffset: 50, yOffset: 20},
+	{valPtr: &saxState.noteButtons[5], size: 60, xOffset: 25, yOffset: 30},
+	{valPtr: &saxState.noteButtons[6], size: 60, xOffset: 10, yOffset: 10},
 }
 
 // Thank god equal temperament is easy
@@ -97,8 +99,8 @@ var saxFingeringsMap = map[SaxNoteButtons]float64{
 	{true, true, true, true, true, true, true}:        C4,
 }
 
-// Return the pitch that the sax is playing based on s.
-// A return pitch of 0 means it's not playing anything.
+// Return the pitch that the sax should be playing based on s.
+// A return pitch of 0 means not playing anything.
 func playingPitch(s SaxState) float64 {
 	basePitch, ok := saxFingeringsMap[s.noteButtons]
 	if !ok {
