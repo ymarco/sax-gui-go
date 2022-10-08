@@ -84,6 +84,7 @@ func (self *SineWaveInputGenerator) transitionInto(aNew float32) {
 	self.a = aNew
 	self.b = aOld*float32(self.samplesRead) + bOld - aNew*float32(self.samplesRead)
 }
+
 // TODO the whole smoother interface isn't working
 type InputGenerator interface {
 	apply() float32
@@ -168,4 +169,14 @@ func StreamingPlayer(notes chan Note, pause chan int, quit chan int) {
 		}
 	}
 
+}
+
+type SaxAudioController struct {
+	notes chan Note
+	pause chan int
+	quit  chan int
+}
+
+func StartSaxAudioPlayer(c SaxAudioController) {
+	go StreamingPlayer(c.notes, c.pause, c.quit)
 }

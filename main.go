@@ -4,6 +4,7 @@ import (
 	"image"
 	"image/color"
 	"log"
+	"math"
 	"os"
 	"time"
 
@@ -21,17 +22,13 @@ import (
 	"gioui.org/widget/material"
 )
 
-func main() {
-	notes := make(chan Note)
-	pause := make(chan int)
-	quit := make(chan int)
-	go StreamingPlayer(notes, pause, quit)
-	notes <- Note{Freq: 440.0, Vol: 1.0}
-	for i := 1; ; i++{
-		time.Sleep(500 * time.Millisecond)
-		notes <- Note{Freq: 440.0/float32(i), Vol: 1.0}
-	}
+var saxAudioController SaxAudioController
 
+func main() {
+	saxAudioController.notes = make(chan Note)
+	saxAudioController.pause = make(chan int)
+	saxAudioController.quit = make(chan int)
+	StartSaxAudioPlayer(saxAudioController)
 	go func() {
 		w := app.NewWindow()
 		err := run(w)
@@ -119,16 +116,25 @@ var saxKeyMap = map[string]int64{
 	"H": 4,
 }
 
-func updateSaxState(e key.Event) {
+// return true if something changed
+func updateSaxState(e key.Event) bool {
 	saxKey, ok := saxKeyMap[e.Name]
 	if !ok {
-		return
+		return false
 	}
+	changed := false
 	if e.State == key.Press {
-		saxState[saxKey] = true
+		if saxState[saxKey] == false {
+			saxState[saxKey] = true
+			changed = true
+		}
 	} else {
-		saxState[saxKey] = false
+		if saxState[saxKey] == true {
+			saxState[saxKey] = false
+			changed = true
+		}
 	}
+	return changed
 }
 
 func run(w *app.Window) error {
@@ -149,7 +155,9 @@ func run(w *app.Window) error {
 				if !ok {
 					continue
 				}
-				updateSaxState(e)
+				if updateSaxState(e) {
+					updateAudioOutput(saxState)
+				}
 			}
 			SaxStateLayout(gtx, saxState)
 			// register for keyboard input
@@ -161,4 +169,21 @@ func run(w *app.Window) error {
 			e.Frame(gtx.Ops)
 		}
 	}
+}
+
+func updateAudioOutput(saxState SaxButtonState) {
+	// for now: treat the buttons as a binary counter
+	noteNum := 0
+	for _, v := range saxState {
+		noteNum = noteNum << 1
+		if v {
+			noteNum += 1
+		}
+	}
+	noteNum -= 1
+	if noteNum == -1 {
+		saxAudioController.pause <- 1
+	}
+	freq := 440.0 * math.Pow(2, float64(noteNum)/float64(12))
+	saxAudioController.notes <- Note{Freq: float32(freq), Vol: 1.0}
 }
