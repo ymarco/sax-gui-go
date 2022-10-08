@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"math"
+	"time"
 
 	"github.com/hajimehoshi/oto/v2"
 )
@@ -128,9 +129,9 @@ type Note struct {
 }
 
 // Plays notes from the channel notes, synchronically (never returns by itself)
-// When a value is recieved from pause, stop and don't play anything.
+// A note with freq or volume 0 means pause playing.
 // When a value is recieved from quit, return.
-func StreamingPlayer(notes chan Note, pause chan int, quit chan int) {
+func StreamingPlayer(notes chan Note, quit chan int) {
 	// Prepare an Oto context (this will use your default audio device) that will
 	// play all our sounds. Its configuration can't be changed later.
 
@@ -158,6 +159,9 @@ func StreamingPlayer(notes chan Note, pause chan int, quit chan int) {
 		case note := <-notes:
 			if player != nil {
 				player.Pause()
+				if note.Freq == 0 || note.Vol == 0 {
+					continue // don't play
+				}
 				// account for unplayed samples
 				wave.input.samplesRead -= int64(player.UnplayedBufferSize() / audioBitDepth)
 			}
@@ -166,10 +170,6 @@ func StreamingPlayer(notes chan Note, pause chan int, quit chan int) {
 			// TODO handle note.Vol
 			player = otoCtx.NewPlayer(&wave)
 			player.Play() // async, doesn't block
-		case <-pause:
-			if player != nil {
-				player.Pause()
-			}
 		case <-quit:
 			if player != nil {
 				player.Pause()
@@ -184,11 +184,38 @@ func StreamingPlayer(notes chan Note, pause chan int, quit chan int) {
 // channels do.
 type NoteStreamAudioController struct {
 	notes chan Note
-	pause chan int
 	quit  chan int
 }
 
-// Asynchronically start playing audio according to c
-func StartNoteStreamAudioPlayer(c NoteStreamAudioController) {
-	go StreamingPlayer(c.notes, c.pause, c.quit)
+// BufferedStreamAudioPlayer joins together successive notes that come within
+// timeout to avoid jarring audio output
+func BufferedStreamAudioPlayer(c NoteStreamAudioController, timeout time.Duration) {
+	playerNotes := make(chan Note)
+	playerQuit := make(chan int)
+	var prevNote Note
+	go StreamingPlayer(playerNotes, playerQuit)
+	for {
+		select {
+		case <-c.quit:
+			playerQuit <- 1
+			return
+		case note := <-c.notes:
+			deadline := time.After(timeout)
+		JoinNotes:
+			for {
+				select {
+				case note = <-c.notes:
+					continue
+				case <-deadline:
+					// no other notes
+					break JoinNotes
+				}
+			}
+			if note == prevNote {
+				continue
+			}
+			playerNotes <- note
+			prevNote = note
+		}
+	}
 }

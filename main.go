@@ -5,6 +5,7 @@ import (
 	"image/color"
 	"log"
 	"os"
+	"time"
 
 	"gioui.org/app"
 	"gioui.org/font/gofont"
@@ -24,10 +25,9 @@ import (
 var saxAudioController NoteStreamAudioController
 
 func main() {
-	saxAudioController.notes = make(chan Note)
-	saxAudioController.pause = make(chan int)
+	saxAudioController.notes = make(chan Note, 10)
 	saxAudioController.quit = make(chan int)
-	StartNoteStreamAudioPlayer(saxAudioController)
+	go BufferedStreamAudioPlayer(saxAudioController, 10*time.Millisecond)
 	defer func() { saxAudioController.quit <- 1 }()
 	go func() {
 		w := app.NewWindow()
@@ -175,9 +175,5 @@ func run(w *app.Window) error {
 // Update the playing note to be the one that's played in s.
 func updateAudioOutput(s SaxState) {
 	freq := playingPitch(s)
-	if freq != 0 {
-		saxAudioController.notes <- Note{Freq: float32(freq), Vol: 0.1}
-	} else {
-		saxAudioController.pause <- 1
-	}
+	saxAudioController.notes <- Note{Freq: float32(freq), Vol: 0.1}
 }
