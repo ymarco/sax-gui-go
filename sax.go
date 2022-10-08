@@ -49,7 +49,7 @@ type ButtonDrawingInstruction struct {
 }
 
 // this is a constant
-var saxButtonDrawingInstructions = [11]ButtonDrawingInstruction{
+var saxButtonDrawingInstructions = []ButtonDrawingInstruction{
 	{sourceStateButton: &saxState.noteButtons[0], drawingSize: 1.0},
 	{sourceStateButton: &saxState.noteButtons[1], drawingSize: 1.0},
 	{sourceStateButton: &saxState.noteButtons[2], drawingSize: 1.0},

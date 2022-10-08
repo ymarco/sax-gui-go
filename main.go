@@ -95,9 +95,7 @@ func SaxStateLayout(gtx layout.Context, state SaxState) layout.Dimensions {
 			return layout.UniformInset(unit.Dp(10)).Layout(gtx,
 				func(gtx layout.Context) layout.Dimensions {
 					var color color.NRGBA
-					// TODO this segfaults
-					// if *instr.sourceStateButton {
-					if false {
+					if *instr.sourceStateButton {
 						color = onColor
 					} else {
 						color = offColor
