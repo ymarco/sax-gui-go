@@ -31,8 +31,8 @@ var saxKeyMap = map[string]*bool{
 	"E": &saxState.noteButtons[1],
 	"O": &saxState.noteButtons[2],
 	"A": &saxState.auxButtons[SharpKey],
-	":": &saxState.auxButtons[FlatKey],
-	" ": &saxState.auxButtons[UpOctaveKey],
+	";": &saxState.auxButtons[FlatKey],
+	"Space": &saxState.auxButtons[UpOctaveKey],
 	// TODO find another left thumb key for DownOctaveKey
 	"H": &saxState.noteButtons[3],
 	"T": &saxState.noteButtons[4],
@@ -40,7 +40,7 @@ var saxKeyMap = map[string]*bool{
 	"S": &saxState.noteButtons[6],
 }
 
-const saxKeySet = "U|E|O|A|:| |H|T|N|S"
+const saxKeySet = "U|E|O|A|;|Space|H|T|N|S"
 
 
 type ButtonDrawingInstruction struct {
