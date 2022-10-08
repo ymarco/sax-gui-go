@@ -94,9 +94,20 @@ var saxFingeringsMap = map[SaxNoteButtons]float64{
 	{true, true, false, false, false, false, false}:   A4,
 	{true, true, true, false, false, false, false}:    G4,
 	{true, true, true, true, false, false, false}:     F4,
-	{true, true, true, true, true, false, false}:      E4,
-	{true, true, true, true, true, true, false}:       D4,
-	{true, true, true, true, true, true, true}:        C4,
+	// cheapen out: allow playing the low notes when not all the previous
+	// buttons are pressed. Standard keyboards detect only up to 6 presses, and
+	// we want to allow octave & sharp/flat buttons too.
+
+	// I chose to redact keys before the last until only 4 are pressed.
+	{true, true, true, true, true, false, false}:  E4, // original
+	{true, true, true, false, true, false, false}: E4, // with 1 redacted
+	{true, true, true, true, true, true, false}:   D4, // original
+	{true, true, true, true, false, true, false}:  D4, // with 1 redacted
+	{true, true, true, false, false, true, false}: D4, // with 2 redacted
+	{true, true, true, true, true, true, true}:    C4, // original
+	{true, true, true, true, true, false, true}:   C4, // with 1 redacted
+	{true, true, true, true, false, false, true}:  C4, // with 2 redacted
+	{true, true, true, false, false, false, true}: C4, // with 3 redacted
 }
 
 // Return the pitch that the sax should be playing based on s.
