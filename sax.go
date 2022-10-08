@@ -100,17 +100,14 @@ var saxFingeringsMap = map[SaxNoteButtons]float64{
 	//
 	// I chose to redact keys before the last until only 4 are pressed.
 	{true, true, true, true, true, false, false}:  E4, // original
-	{true, true, true, false, true, false, false}: E4, // with 1 redacted
+	// {true, true, true, false, true, false, false}: E4, // with 1 redacted
 	{true, true, true, true, true, true, false}:   D4, // original
-	{true, true, true, true, false, true, false}:  D4, // with 1 redacted
-	{true, true, true, false, false, true, false}: D4, // with 2 redacted
+	// {true, true, true, true, false, true, false}:  D4, // with 1 redacted
+	// {true, true, true, false, false, true, false}: D4, // with 2 redacted
 	{true, true, true, true, true, true, true}:    C4, // original
-	{true, true, true, true, true, false, true}:   C4, // with 1 redacted
-	{true, true, true, true, false, false, true}:  C4, // with 2 redacted
-	{true, true, true, false, false, false, true}: C4, // with 3 redacted
-
-	// HACK we currently don't have a way to sound C5sharp, which is when you
-	// blow without any buttons pressed. Make it so
+	// {true, true, true, true, true, false, true}:   C4, // with 1 redacted
+	// {true, true, true, true, false, false, true}:  C4, // with 2 redacted
+	// {true, true, true, false, false, false, true}: C4, // with 3 redacted
 }
 
 // Return the pitch that the sax should be playing based on s.
