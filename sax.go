@@ -87,17 +87,17 @@ var (
 	B3      = semitoneIntervalFrom(A4, -10)
 )
 var saxFingeringsMap = map[SaxNoteButtons]float64{
-	// {false, false, false, false, false, false, false}: C5sharp,
-	{false, false, false, false, false, false, false}: 0.0,
+	// HACK in practice this wouldn't actually give C5sharp; see playingPitch
+	{false, false, false, false, false, false, false}: C5sharp,
 	{false, true, false, false, false, false, false}:  C5,
 	{true, false, false, false, false, false, false}:  B4,
 	{true, true, false, false, false, false, false}:   A4,
 	{true, true, true, false, false, false, false}:    G4,
 	{true, true, true, true, false, false, false}:     F4,
-	// cheapen out: allow playing the low notes when not all the previous
-	// buttons are pressed. Standard keyboards detect only up to 6 presses, and
-	// we want to allow octave & sharp/flat buttons too.
-
+	// HACK allow playing the low notes when not all the previous buttons are
+	// pressed. Standard keyboards detect only up to 6 presses, and we want to
+	// allow octave & sharp/flat buttons too.
+	//
 	// I chose to redact keys before the last until only 4 are pressed.
 	{true, true, true, true, true, false, false}:  E4, // original
 	{true, true, true, false, true, false, false}: E4, // with 1 redacted
@@ -108,14 +108,34 @@ var saxFingeringsMap = map[SaxNoteButtons]float64{
 	{true, true, true, true, true, false, true}:   C4, // with 1 redacted
 	{true, true, true, true, false, false, true}:  C4, // with 2 redacted
 	{true, true, true, false, false, false, true}: C4, // with 3 redacted
+
+	// HACK we currently don't have a way to sound C5sharp, which is when you
+	// blow without any buttons pressed. Make it so
 }
 
 // Return the pitch that the sax should be playing based on s.
 // A return pitch of 0 means not playing anything.
 func playingPitch(s SaxState) float64 {
 	basePitch, ok := saxFingeringsMap[s.noteButtons]
+	// HACK make the empty note fingering not play a not at instead of playing
+	// C5sharp. The way to play a C5sharp is by playing a fingering with the
+	// first button unpressed.
+	if s.noteButtons == (SaxNoteButtons{}) {
+		basePitch = 0
+	}
 	if !ok {
-		basePitch = C5sharp // TODO this might not be correct
+		// the fingering has an unrecognized gap. try to see if we get a good
+		// fingering by removing the last button
+		var noteButtons SaxNoteButtons
+		copy(noteButtons[:], s.noteButtons[:])
+		for i := len(noteButtons) - 1; i >= 0; i-- {
+			noteButtons[i] = false
+			if p, ok := saxFingeringsMap[noteButtons]; ok {
+				basePitch = p
+				break
+			}
+		}
+
 	}
 	modifier := 1.0
 	if s.auxButtons[FlatKey] {

@@ -74,9 +74,10 @@ func SineWaveInputCoeff(freq float32, sampleRate int) float32 {
 
 func (self *SineWaveInputGenerator) apply() float32 {
 	res := self.a*float32(self.samplesRead) + self.b
-	self.samplesRead += 1
+	self.samplesRead++
 	return res
 }
+
 // If inputted to a sine function, this changes the wave into a new one with
 // frequency aNew, such that the old and new waves connect without jumps.
 func (self *SineWaveInputGenerator) transitionInto(aNew float32) {
