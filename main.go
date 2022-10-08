@@ -141,14 +141,17 @@ func run(w *app.Window) error {
 			gtx := layout.NewContext(ops, e)
 			// title.Layout(gtx)
 			// handle keyboard input
+			shouldUpdate := false
 			for _, ev := range gtx.Events(w) {
 				e, ok := ev.(key.Event)
 				if !ok {
 					continue
 				}
-				if updateSaxState(e) {
-					updateAudioOutput(saxState)
-				}
+				// log.Println(e)
+				shouldUpdate = shouldUpdate || updateSaxState(e)
+			}
+			if shouldUpdate {
+				updateAudioOutput(saxState)
 			}
 			SaxStateLayout(gtx, saxState)
 			// register for keyboard input
