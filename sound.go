@@ -40,6 +40,7 @@ func StreamingPlayer(notes chan Note, quit chan int) {
 
 	// And start the synthesizer in the background
 	go ctrl.StartSynth()
+	defer ctrl.Quit()
 	for {
 		select {
 		case note := <-notes:
@@ -52,9 +53,8 @@ func StreamingPlayer(notes chan Note, quit chan int) {
 					mixer.NoteOn(0, 69 /* A4 */, 1.0)
 				}
 			}
-			mixer.SetPitchbend(0, float64(note.Freq) / A4)
+			mixer.SetPitchbend(0, float64(note.Freq)/A4)
 		case <-quit:
-			ctrl.Quit()
 			return
 		}
 	}
@@ -75,10 +75,10 @@ func BufferedStreamAudioPlayer(c NoteStreamAudioController, timeout time.Duratio
 	playerQuit := make(chan int)
 	var prevNote Note
 	go StreamingPlayer(playerNotes, playerQuit)
+	defer func() { playerQuit <- 1 }()
 	for {
 		select {
 		case <-c.quit:
-			playerQuit <- 1
 			return
 		case note := <-c.notes:
 			deadline := time.After(timeout)
