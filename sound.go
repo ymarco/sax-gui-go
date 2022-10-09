@@ -8,7 +8,7 @@ import (
 	"github.com/hajimehoshi/oto/v2"
 )
 
-// Stolen from https://github.com/hajimehoshi/oto
+// Stolen from Sointu
 //
 // FloatBufferTo16BitLE is a naive helper method to convert []float32 buffers to
 // 16-bit little-endian, but encoded in byte buffer
